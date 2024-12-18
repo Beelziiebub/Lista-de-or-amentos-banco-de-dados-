@@ -1,0 +1,121 @@
+// Classe para o Banco de Dados com Identificação pelo Nome
+class BancoDeDados {
+    constructor(nome) {
+        this.nome = nome; // Identificador do banco
+        this.dados = JSON.parse(localStorage.getItem(this.nome)) || { receitas: [], despesas: [] };
+    }
+
+    // Salva os dados no localStorage usando o nome como chave
+    salvarDados() {
+        localStorage.setItem(this.nome, JSON.stringify(this.dados));
+    }
+
+    // Adiciona uma receita
+    adicionarReceita(nomeReceita, valor) {
+        this.dados.receitas.push({ nome: nomeReceita, valor });
+        this.salvarDados();
+    }
+
+    // Adiciona uma despesa
+    adicionarDespesa(nomeDespesa, valor) {
+        this.dados.despesas.push({ nome: nomeDespesa, valor });
+        this.salvarDados();
+    }
+
+    // Reseta os dados (apaga receitas e despesas)
+    resetarDados() {
+        this.dados = { receitas: [], despesas: [] };
+        this.salvarDados();
+    }
+
+    // Calcula o total de receitas
+    calcularTotalReceitas() {
+        return this.dados.receitas.reduce((total, receita) => total + receita.valor, 0);
+    }
+
+    // Calcula o total de despesas
+    calcularTotalDespesas() {
+        return this.dados.despesas.reduce((total, despesa) => total + despesa.valor, 0);
+    }
+
+    // Calcula o saldo
+    calcularSaldo() {
+        return this.calcularTotalReceitas() - this.calcularTotalDespesas();
+    }
+}
+
+// Função para inicializar o banco com um nome
+function inicializarBanco() {
+    const nomeBanco = document.getElementById("nomeBanco").value.trim();
+    if (!nomeBanco) {
+        alert("Por favor, insira um nome para o banco de dados.");
+        return;
+    }
+
+    banco = new BancoDeDados(nomeBanco);
+    atualizarInterface();
+}
+
+// Função para atualizar a interface com os dados do banco
+function atualizarInterface() {
+    if (!banco) return;
+
+    const saldo = banco.calcularSaldo();
+    document.getElementById("saldo").textContent = `R$ ${saldo.toFixed(2)}`;
+    document.getElementById("totalReceitas").textContent = `R$ ${banco.calcularTotalReceitas().toFixed(2)}`;
+    document.getElementById("totalDespesas").textContent = `R$ ${banco.calcularTotalDespesas().toFixed(2)}`;
+}
+
+// Função para adicionar uma transação
+function adicionarTransacao() {
+    if (!banco) {
+        alert("Inicialize o banco de dados antes de adicionar transações.");
+        return;
+    }
+
+    const nome = document.getElementById("nome").value;
+    const valor = parseFloat(document.getElementById("valor").value);
+    const tipo = document.getElementById("tipo").value;
+
+    if (!nome || isNaN(valor)) {
+        alert("Cuidado para não preencher os valores incorretamente.");
+        return;
+    }
+
+    // Adiciona no banco de dados
+    if (tipo === "receita") {
+        banco.adicionarReceita(nome, valor);
+    } else if (tipo === "despesa") {
+        banco.adicionarDespesa(nome, valor);
+    }
+
+    atualizarInterface();
+    limparCampos();
+}
+
+// Função para resetar valores
+function resetarValores() {
+    if (!banco) {
+        alert("Inicialize o banco de dados antes de resetar valores.");
+        return;
+    }
+
+    banco.resetarDados();
+    atualizarInterface();
+    limparCampos();
+}
+
+// Função para limpar os campos do formulário
+function limparCampos() {
+    document.getElementById("nome").value = "";
+    document.getElementById("valor").value = "";
+}
+
+// Carregar interface ao iniciar a página
+window.onload = function () {
+    const nomeBanco = localStorage.getItem("nomeBanco");
+    if (nomeBanco) {
+        banco = new BancoDeDados(nomeBanco);
+    }
+    atualizarInterface();
+};
